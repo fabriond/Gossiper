@@ -26,15 +26,25 @@
     <div class="row">
       <div class="column" v-bind:key="comment" v-for="comment in comments">
         <div class="card">
-          <h3>{{comment.author}}</h3>
-          <p>{{comment.comment}}</p>
+          <div v-if="edit_id != comment._id">
+            <h3>{{comment.author}}</h3>
+            <p>{{comment.comment}}</p>
+            <button id="delete" class="round-button" v-on:click="deleteComment(comment._id)"><img id="menu" src="../assets/delete.png"></button>
+            <button id="edit" class="round-button" v-on:click="changeEditing(comment._id)"><img id="menu" src="../assets/edit.png"></button>
+          </div>
+          <div v-if="edit_id == comment._id">
+            <input id="author" type="text" :placeholder="comment.author" v-on:input="auth = $event.target.value">
+            <input id="comment" type="text" :placeholder="comment.comment" v-on:input="com = $event.target.value">
+            <button id="save" class="submit" v-on:click="editComment(comment._id, auth, com, comment)">Salvar</button>
+            <button id="cancel" class="submit" v-on:click="edit_id = ''">Cancelar</button>
+          </div>
         </div>
       </div>
       <div class="column" v-if="docTransparencia">
         <div class="card">
           <input id="author" type="text" placeholder="Autor" v-on:input="auth = $event.target.value">
           <input id="comment" type="text" placeholder="Comentário" v-on:input="com = $event.target.value">
-          <button class="submit" v-on:click="postComment(auth, com)">Comentar</button>
+          <button id="save" class="submit" v-on:click="postComment(auth, com)">Comentar</button>
         </div>
       </div>
     </div>
@@ -56,7 +66,8 @@ export default {
       comments: '',
       auth: '',
       com: '',
-      loading: false
+      loading: false,
+      edit_id: ''
     }
   },
 
@@ -64,7 +75,7 @@ export default {
     getSpecificDocument: function () {
       this.codigo = document.getElementById('codigo').value.toString()
       // eslint-disable-next-line
-      axios.get('http://localhost:3000/'+this.codigo+'/comments').then((response) => {
+      axios.get('http://localhost:3000/' + this.codigo + '/comments').then((response) => {
         this.docTransparencia = ''
         this.comments = ''
         this.docTransparencia = response.data
@@ -86,6 +97,36 @@ export default {
         this.loading = false
       }).catch((reason) => {
         this.loading = false
+      })
+    },
+
+    changeEditing: function (commentId) {
+      this.edit_id = commentId
+      console.log(this.edit_id)
+    },
+
+    editComment: function (commentId, author, comment, prevComment) {
+      if (comment == null || comment === '') comment = prevComment.comment
+      if (author == null || author === '') author = prevComment.author
+
+      axios.put('http://localhost:3000/' + this.codigo + '/comments/' + commentId, {author: author, comment: comment}).then((response) => {
+        const deleteIndex = this.comments.findIndex((element, index, array) => {
+          return element === prevComment
+        })
+
+        this.comments.splice(deleteIndex, 1)
+        this.comments.push(response.data)
+        this.edit_id = ''
+      })
+    },
+
+    deleteComment: function (commentId) {
+      axios.delete('http://localhost:3000/' + this.codigo + '/comments/' + commentId).then((response) => {
+        const deleteIndex = this.comments.findIndex((element, index, array) => {
+          return element === response.data
+        })
+
+        this.comments.splice(deleteIndex, 1)
       })
     },
 
@@ -120,6 +161,11 @@ li {
 }
 a {
   color: #42b983;
+}
+#menu{
+  width: 20px;
+  border-radius: 20%;
+  float:left;
 }
 button {
   vertical-align: 20px;
@@ -195,6 +241,10 @@ input:focus{
 input, label{
   display: block;
 }
+#save, #cancel{
+  width: 30%;
+  padding: 6px;
+}
 label{
   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
   font-size: 20px;
@@ -245,5 +295,50 @@ label{
   border: 5px solid #42b983;
   margin-bottom: 10px;
   overflow-wrap: break-word;
+}
+
+.round-button {
+  float: right;
+  padding: 16px;
+  margin-top: -50px;
+}
+.round-button:active {
+  transform: translateY(4px);
+}
+.round-button:disabled {
+  transform: translateY(4px);
+  cursor: default;
+}
+#delete{
+  background-color: #b82727; /* Red */
+  box-shadow: 0 7px #8a2222;
+}
+#delete:hover{
+  background-color: #aa2f2f;
+}
+#delete:active{
+  background-color: #aa2f2f;
+  box-shadow: 0 5px #8a2222;
+}
+#delete:disabled{
+  background-color: #955;
+  box-shadow: 0 5px #999;
+}
+
+#edit{
+  margin-right: 10px;
+  background-color: #42b983; /* Red */
+  box-shadow: 0 7px #389b6e;
+}
+#edit:hover{
+  background-color: #41b681;
+}
+#edit:active{
+  background-color: #41b681;
+  box-shadow: 0 5px #389b6e;
+}
+#edit:disabled{
+  background-color: #699;
+  box-shadow: 0 5px #999;
 }
 </style>
