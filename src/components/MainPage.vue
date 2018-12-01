@@ -30,12 +30,12 @@
             <h3>{{comment.author}}</h3>
             <p>{{comment.comment}}</p>
             <button id="delete" class="round-button" v-on:click="deleteComment(comment._id)"><img id="menu" src="../assets/delete.png"></button>
-            <button id="edit" class="round-button" v-on:click="changeEditing(comment._id)"><img id="menu" src="../assets/edit.png"></button>
+            <button id="edit" class="round-button" v-on:click="edit_id = comment._id"><img id="menu" src="../assets/edit.png"></button>
           </div>
           <div v-if="edit_id == comment._id">
-            <input id="author" type="text" :placeholder="comment.author" v-on:input="auth = $event.target.value">
-            <input id="comment" type="text" :placeholder="comment.comment" v-on:input="com = $event.target.value">
-            <button id="save" class="submit" v-on:click="editComment(comment._id, auth, com, comment)">Salvar</button>
+            <input id="author" type="text" :placeholder="comment.author" v-on:input="edit_auth = $event.target.value">
+            <input id="comment" type="text" :placeholder="comment.comment" v-on:input="edit_com = $event.target.value">
+            <button id="save" class="submit" v-on:click="editComment(comment._id, edit_auth, edit_com, comment)">Salvar</button>
             <button id="cancel" class="submit" v-on:click="edit_id = ''">Cancelar</button>
           </div>
         </div>
@@ -44,7 +44,7 @@
         <div class="card">
           <input id="author" type="text" placeholder="Autor" v-on:input="auth = $event.target.value">
           <input id="comment" type="text" placeholder="Comentário" v-on:input="com = $event.target.value">
-          <button id="save" class="submit" v-on:click="postComment(auth, com)">Comentar</button>
+          <button id="create" class="submit" v-on:click="postComment(auth, com)">Comentar</button>
         </div>
       </div>
     </div>
@@ -66,6 +66,8 @@ export default {
       comments: '',
       auth: '',
       com: '',
+      edit_auth: '',
+      edit_com: '',
       loading: false,
       edit_id: ''
     }
@@ -91,42 +93,46 @@ export default {
 
     postComment: function (author, comment) {
       axios.post('http://localhost:3000/' + this.codigo + '/comments', {author: author, comment: comment}).then((response) => {
-        document.getElementById('author').value = ''
-        document.getElementById('comment').value = ''
         this.comments.push(response.data)
         this.loading = false
+
+        document.getElementById('author').value = ''
+        document.getElementById('comment').value = ''
+        this.auth = ''
+        this.com = ''
       }).catch((reason) => {
         this.loading = false
       })
     },
 
-    changeEditing: function (commentId) {
-      this.edit_id = commentId
-      console.log(this.edit_id)
-    },
-
     editComment: function (commentId, author, comment, prevComment) {
+      console.log({author: author})
       if (comment == null || comment === '') comment = prevComment.comment
       if (author == null || author === '') author = prevComment.author
 
       axios.put('http://localhost:3000/' + this.codigo + '/comments/' + commentId, {author: author, comment: comment}).then((response) => {
-        const deleteIndex = this.comments.findIndex((element, index, array) => {
-          return element === prevComment
+        const editIndex = this.comments.findIndex((element, index, array) => {
+          return element._id === prevComment._id
         })
 
-        this.comments.splice(deleteIndex, 1)
-        this.comments.push(response.data)
+        this.comments[editIndex].author = response.data.author
+        this.comments[editIndex].comment = response.data.comment
+
         this.edit_id = ''
+        this.edit_auth = ''
+        this.edit_com = ''
       })
     },
 
     deleteComment: function (commentId) {
       axios.delete('http://localhost:3000/' + this.codigo + '/comments/' + commentId).then((response) => {
-        const deleteIndex = this.comments.findIndex((element, index, array) => {
-          return element === response.data
+        var aux = this.comments
+        const deleteIndex = aux.findIndex((element, index, array) => {
+          return element._id === response.data._id
         })
 
-        this.comments.splice(deleteIndex, 1)
+        aux.splice(deleteIndex, 1)
+        this.comments = aux
       })
     },
 
@@ -241,9 +247,12 @@ input:focus{
 input, label{
   display: block;
 }
-#save, #cancel{
+#create, #save, #cancel{
   width: 30%;
   padding: 6px;
+}
+#author, #comment{
+  text-align: center;
 }
 label{
   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
