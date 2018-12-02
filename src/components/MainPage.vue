@@ -86,24 +86,33 @@ export default {
         this.comments = this.docTransparencia.comments
         delete this.docTransparencia.comments
         this.loading = false
+        let toast = this.$toasted.show('Documento encontrado', {
+          theme: 'toasted-primary',
+          position: 'top-left',
+          duration: 3000
+        })
+        toast.el.style.fontFamily = "'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif"
       }).catch((reason) => {
         this.docTransparencia = ''
         this.comments = ''
         this.loading = false
+        let toast = this.$toasted.show('Documento não encontrado', {
+          theme: 'toasted-primary',
+          position: 'top-left',
+          duration: 3000
+        })
+        toast.el.style.fontFamily = "'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif"
       })
     },
 
     postComment: function (author, comment) {
       axios.post(process.env.VUE_APP_API + this.codigo + '/comments', {author: author, comment: comment}).then((response) => {
         this.comments.push(response.data)
-        this.loading = false
 
         document.getElementById('author').value = ''
         document.getElementById('comment').value = ''
         this.auth = ''
         this.com = ''
-      }).catch((reason) => {
-        this.loading = false
       })
     },
 
@@ -225,7 +234,7 @@ th, td {
   padding: 10px 15px;
   text-align: left;
 }
-th, td, button, h1, h2, #tutorial{
+th, td, button, h1, h2, #tutorial, label{
   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 input{
@@ -257,7 +266,6 @@ input, label{
   text-align: center;
 }
 label{
-  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
   font-size: 20px;
   margin-top: 10px;
   margin-left: -140px;
