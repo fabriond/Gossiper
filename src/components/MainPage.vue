@@ -76,8 +76,7 @@ export default {
   methods: {
     getSpecificDocument: function () {
       this.codigo = document.getElementById('codigo').value.toString()
-      // eslint-disable-next-line
-      axios.get('http://localhost:3000/' + this.codigo + '/comments').then((response) => {
+      axios.get(process.env.VUE_APP_API + this.codigo + '/comments').then((response) => {
         this.docTransparencia = ''
         this.comments = ''
         this.docTransparencia = response.data
@@ -92,7 +91,7 @@ export default {
     },
 
     postComment: function (author, comment) {
-      axios.post('http://localhost:3000/' + this.codigo + '/comments', {author: author, comment: comment}).then((response) => {
+      axios.post(process.env.VUE_APP_API + this.codigo + '/comments', {author: author, comment: comment}).then((response) => {
         this.comments.push(response.data)
         this.loading = false
 
@@ -110,7 +109,7 @@ export default {
       if (comment == null || comment === '') comment = prevComment.comment
       if (author == null || author === '') author = prevComment.author
 
-      axios.put('http://localhost:3000/' + this.codigo + '/comments/' + commentId, {author: author, comment: comment}).then((response) => {
+      axios.put(process.env.VUE_APP_API + this.codigo + '/comments/' + commentId, {author: author, comment: comment}).then((response) => {
         const editIndex = this.comments.findIndex((element, index, array) => {
           return element._id === prevComment._id
         })
@@ -125,7 +124,7 @@ export default {
     },
 
     deleteComment: function (commentId) {
-      axios.delete('http://localhost:3000/' + this.codigo + '/comments/' + commentId).then((response) => {
+      axios.delete(process.env.VUE_APP_API + this.codigo + '/comments/' + commentId).then((response) => {
         var aux = this.comments
         const deleteIndex = aux.findIndex((element, index, array) => {
           return element._id === response.data._id
