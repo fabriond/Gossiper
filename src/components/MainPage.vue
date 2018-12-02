@@ -1,53 +1,59 @@
 <template>
   <div class="hello">
-    <div class="start" v-if="!docTransparencia">
-      <h1>{{ hello }}</h1>
-      <h2>{{ msg }}</h2>
-      <img src="../assets/logo.gif">
+    <br><br><br>
+    <div v-if="!docTransparencia"><br>
+      <a class="tutorial" target="_blank"
+        href="http://www.portaltransparencia.gov.br/despesas/favorecido?ordenarPor=valor&direcao=desc">Procure aqui códigos de despesas</a>
+      <p class="tutorial" >
+        Para achar o código da despesa, basta clicar em qualquer <br>
+        documento e pegar a última parte da url antes da interrogação
+      </p>
+      <img v-if="!docTransparencia" src="../assets/logo.gif">
     </div>
     <label for="codigo">Código da despesa</label>
-    <input id="codigo" class="group" type="text">
-    <p></p>
+    <input id="codigo" class="group" type="text" v-on:input="codigo = $event.target.value">
     <button :disabled="loading" v-on:click="getSpecificDocument(codigo), loading=true">Procurar despesa pública</button>
     <p></p>
-    <table align="center" v-if="docTransparencia">
-      <thead>
-        <tr v-bind:key="topic, value" v-for="(value, topic) in (Object.keys(docTransparencia), docTransparencia)">
-          <div v-if="topic != 'codigoOrgao' && topic != 'codigoOrgaoSuperior'">
-            <th>{{removeCamelCase(topic)}}</th>
-            <td>
-              <div v-if="topic == 'valor'">R$ {{trim(value)}}</div>
-              <div v-else>{{trim(value)}}</div>
-            </td>
+    <body>
+      <table align="center" v-if="docTransparencia">
+        <thead>
+          <tr v-bind:key="topic, value" v-for="(value, topic) in (Object.keys(docTransparencia), docTransparencia)">
+            <div>
+              <th>{{removeCamelCase(topic)}}</th>
+              <td>
+                <div v-if="topic == 'valor'">R$ {{trim(value)}}</div>
+                <div v-else>{{trim(value)}}</div>
+              </td>
+            </div>
+          </tr>
+        </thead>
+      </table>
+      <div class="row">
+        <div class="column" v-bind:key="comment" v-for="comment in comments">
+          <div class="card">
+            <div v-if="edit_id != comment._id">
+              <h3>{{comment.author}}</h3>
+              <p>{{comment.comment}}</p>
+              <button id="delete" class="round-button" v-on:click="deleteComment(comment._id)"><img id="menu" src="../assets/delete.png"></button>
+              <button id="edit" class="round-button" v-on:click="edit_id = comment._id"><img id="menu" src="../assets/edit.png"></button>
+            </div>
+            <div v-if="edit_id == comment._id">
+              <input id="author" type="text" :placeholder="comment.author" v-on:input="edit_auth = $event.target.value">
+              <input id="comment" type="text" :placeholder="comment.comment" v-on:input="edit_com = $event.target.value">
+              <button id="save" class="submit" v-on:click="editComment(comment._id, edit_auth, edit_com, comment)">Salvar</button>
+              <button id="cancel" class="submit" v-on:click="edit_id = ''">Cancelar</button>
+            </div>
           </div>
-        </tr>
-      </thead>
-    </table>
-    <div class="row">
-      <div class="column" v-bind:key="comment" v-for="comment in comments">
-        <div class="card">
-          <div v-if="edit_id != comment._id">
-            <h3>{{comment.author}}</h3>
-            <p>{{comment.comment}}</p>
-            <button id="delete" class="round-button" v-on:click="deleteComment(comment._id)"><img id="menu" src="../assets/delete.png"></button>
-            <button id="edit" class="round-button" v-on:click="edit_id = comment._id"><img id="menu" src="../assets/edit.png"></button>
-          </div>
-          <div v-if="edit_id == comment._id">
-            <input id="author" type="text" :placeholder="comment.author" v-on:input="edit_auth = $event.target.value">
-            <input id="comment" type="text" :placeholder="comment.comment" v-on:input="edit_com = $event.target.value">
-            <button id="save" class="submit" v-on:click="editComment(comment._id, edit_auth, edit_com, comment)">Salvar</button>
-            <button id="cancel" class="submit" v-on:click="edit_id = ''">Cancelar</button>
+        </div>
+        <div class="column" v-if="docTransparencia">
+          <div class="card">
+            <input id="author" type="text" placeholder="Autor" v-on:input="auth = $event.target.value">
+            <input id="comment" type="text" placeholder="Comentário" v-on:input="com = $event.target.value">
+            <button id="create" class="submit" v-on:click="postComment(auth, com)">Comentar</button>
           </div>
         </div>
       </div>
-      <div class="column" v-if="docTransparencia">
-        <div class="card">
-          <input id="author" type="text" placeholder="Autor" v-on:input="auth = $event.target.value">
-          <input id="comment" type="text" placeholder="Comentário" v-on:input="com = $event.target.value">
-          <button id="create" class="submit" v-on:click="postComment(auth, com)">Comentar</button>
-        </div>
-      </div>
-    </div>
+    </body>
     <router-view/>
   </div>
 </template>
@@ -59,8 +65,6 @@ export default {
   name: 'MainPage',
   data () {
     return {
-      hello: 'Bem-vindo ao Gossiper',
-      msg: 'O site para comentar nas despesas públicas do portal da transparência',
       codigo: '',
       docTransparencia: '',
       comments: '',
@@ -74,8 +78,7 @@ export default {
   },
 
   methods: {
-    getSpecificDocument: function () {
-      this.codigo = document.getElementById('codigo').value.toString()
+    getSpecificDocument: function (codigo) {
       axios.get(process.env.VUE_APP_API + this.codigo + '/comments').then((response) => {
         this.docTransparencia = ''
         this.comments = ''
@@ -150,11 +153,11 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h1{
-  margin-top: 60px;
-}
 h1, h2 {
   font-weight: normal;
+}
+.tutorial{
+  font-size: 24px;
 }
 ul {
   list-style-type: none;
@@ -222,7 +225,7 @@ th, td {
   padding: 10px 15px;
   text-align: left;
 }
-th, td, button, h1, h2{
+th, td, button, h1, h2, #tutorial{
   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 input{
@@ -256,7 +259,7 @@ input, label{
 label{
   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
   font-size: 20px;
-  margin-top: 60px;
+  margin-top: 10px;
   margin-left: -140px;
 }
 .submit{
