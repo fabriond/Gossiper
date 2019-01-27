@@ -17,7 +17,7 @@
     <body>
       <table align="center" v-if="docTransparencia">
         <thead>
-          <tr v-bind:key="topic, value" v-for="(value, topic) in (Object.keys(docTransparencia), docTransparencia)">
+          <tr v-bind:key="topic" v-for="(value, topic) in (Object.keys(docTransparencia), docTransparencia)">
             <div>
               <th>{{removeCamelCase(topic)}}</th>
               <td>
